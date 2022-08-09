@@ -1,0 +1,43 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres
+    restart: always
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=test
+    ports:
+      - 5000:5432
+    networks:
+      - kong
+
+  kong:
+    image: kong:latest
+    networks:
+      - kong
+    volumes:
+      - ./kong/config/:/opt/kong
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG:  "/opt/kong/kong.yml"
+    healthcheck:
+      test: [ "CMD", "kong", "health" ]
+      interval: 5s
+      timeout: 2s
+      retries: 15
+    ports:
+      - 8000:8000
+      - 8001:8001
+      - 8443:8443
+      - 8444:8444
+
+volumes:
+  pg-data:
+
+networks:
+  kong:
+    driver: bridge
